@@ -14,27 +14,26 @@ services:
         condition: service_healthy
     networks:
       - internal
-      - public
     ports:
       - "8080:${APP_LISTEN_PORT:-8080}"
 
-  postgres:
-    image: postgres:17-alpine
-    container_name: template-postgres-development
-    restart: always
-    environment:
-      POSTGRES_USER: db_user
-      POSTGRES_PASSWORD: db_password
-      POSTGRES_DB: db_database
-    networks:
-      - internal
-    volumes:
-      - ./volumes/development/postgres_data:/var/lib/postgresql/data:cached
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U db_user -d db_database"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#  postgres:
+#    image: postgres:17-alpine
+#    container_name: template-postgres-development
+#    restart: always
+#    environment:
+#      POSTGRES_USER: db_user
+#      POSTGRES_PASSWORD: db_password
+#      POSTGRES_DB: db_database
+#    networks:
+#      - internal
+#    volumes:
+#      - ./volumes/development/postgres_data:/var/lib/postgresql/data:cached
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U db_user -d db_database"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
 
 networks:
   internal:
