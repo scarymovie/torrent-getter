@@ -1,0 +1,14 @@
+###
+
+# curl -X POST -F "torrent_file=@/home/evgeniy/temp.iso.torrent" http://localhost:8080/upload
+POST http://localhost:8080/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="torrent_file"; filename="odin-doma-1.torrent"
+
+< /home/evgeniy/odin-doma-1.torrent
+--WebAppBoundary--
+
+###
+

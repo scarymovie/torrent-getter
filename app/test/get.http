@@ -1,0 +1,7 @@
+###
+
+# curl http://localhost:8080/files/ubuntu-gnome-16.04.5-desktop-amd64.iso --output ubuntu.iso
+GET http://localhost:8080/files/odin-doma-1.mp4
+
+###
+
