@@ -1,39 +1,57 @@
 
-name: template
+name: torrent-getter
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: torrent-getter-postgres-development
+    restart: always
+    environment:
+      POSTGRES_USER: db_user
+      POSTGRES_PASSWORD: db_password
+      POSTGRES_DB: db_database
+    networks:
+      - internal
+      - public
+    volumes:
+      - ./volumes/development/postgres_data:/var/lib/postgresql/data:cached
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U db_user -d db_database" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "8661:5432"
+
   go:
-    image: template:development
+    image: torrent-getter:development
     build:
       context: ../app
       dockerfile: ../docker/images/alpine/Dockerfile.development
-    container_name: template-go-development
+    container_name: torrent-getter-go-development
     restart: always
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - internal
+      - public
     ports:
-      - "8080:${APP_LISTEN_PORT:-8080}"
+      - "8080:8080"
+    volumes:
+      - ../docker/volumes/go:/app/downloads
 
-#  postgres:
-#    image: postgres:17-alpine
-#    container_name: template-postgres-development
-#    restart: always
-#    environment:
-#      POSTGRES_USER: db_user
-#      POSTGRES_PASSWORD: db_password
-#      POSTGRES_DB: db_database
-#    networks:
-#      - internal
-#    volumes:
-#      - ./volumes/development/postgres_data:/var/lib/postgresql/data:cached
-#    healthcheck:
-#      test: ["CMD-SHELL", "pg_isready -U db_user -d db_database"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
+  migrate:
+    image: migrate/migrate
+    container_name: torrent-getter-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    volumes:
+      - ../app/migrations:/migrations
+    networks:
+      - internal
 
 networks:
   internal:

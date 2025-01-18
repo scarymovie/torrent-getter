@@ -4,21 +4,33 @@ FROM golang:${GO_DOCKER_VERSION}-alpine AS builder
 
 ENV APP_SRC=/go/src \
     APP_BIN=/go/bin \
-    APP_ENV=development \
-    APP_LISTEN_PORT=8080
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
 WORKDIR ${APP_SRC}
 
 COPY go.mod go.sum ./
-
-RUN go mod tidy
+RUN go mod download
 
 COPY . .
 
-RUN go build -o ../bin ${APP_SRC}/cmd/app/main.go
+RUN go build -o ${APP_BIN}/app ${APP_SRC}/cmd/app/main.go
+
+FROM alpine:latest AS runner
+
+RUN apk --no-cache add ca-certificates
+
+ENV APP_BIN=/app \
+    APP_LISTEN_PORT=8080
+
+WORKDIR ${APP_BIN}
+
+COPY --from=builder /go/bin/app .
+
+RUN mkdir -p ./temp
+RUN mkdir -p ./downloads
 
 EXPOSE ${APP_LISTEN_PORT}
 
-WORKDIR ../
-CMD ["./bin/main"]
-#CMD ["tail", "-f", "/dev/null"]
+CMD ["./app"]
