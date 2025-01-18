@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
-	"os"
 	"torrent-getter/internal/services"
 )
 
@@ -30,18 +29,7 @@ func UploadTorrentHandler(c echo.Context) error {
 		}
 		defer file.Close()
 
-		tempPath := "./temp/" + torrentFile.Filename
-		out, err := os.Create(tempPath)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "cannot save file"})
-		}
-		defer out.Close()
-		_, err = out.ReadFrom(file)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "cannot read file"})
-		}
-
-		infoHash, err := services.ProcessTorrentFile(tempPath, client)
+		infoHash, err := services.ProcessTorrentFromReader(file, client)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
@@ -55,10 +43,12 @@ func UploadTorrentHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid input"})
 	}
 
-	infoHash, err := services.ProcessMagnetLink(req.MagnetLink)
+	infoHash, err := services.ProcessMagnetLink(req.MagnetLink, client)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
+
+	log.Printf("Magnet link added with InfoHash: %s", infoHash)
 
 	return c.JSON(http.StatusOK, map[string]string{"info_hash": infoHash, "status": "download started"})
 }
