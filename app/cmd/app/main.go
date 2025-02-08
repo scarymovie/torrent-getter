@@ -41,7 +41,7 @@ func main() {
 
 	e.POST("/upload", handlers.UploadTorrentHandler)
 	e.GET("/files", handlers.ListFilesHandler)
-	e.GET("/stream/:infoHash/:filename", handlers.StreamTorrentHandler)
+	e.GET("/stream/:filepath", handlers.StreamTorrentHandler)
 	e.GET("/torrent/:infoHash/status", handlers.TorrentStatusHandler)
 
 	log.Println("Starting HTTP server on :8080")
