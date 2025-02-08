@@ -40,6 +40,7 @@ services:
       - "8080:8080"
     volumes:
       - ../docker/volumes/go:/app/downloads
+      - ../docker/uploads:/app/uploads
 
   migrate:
     image: migrate/migrate

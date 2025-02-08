@@ -9,7 +9,7 @@ import (
 )
 
 type TorrentUploadRequest struct {
-	MagnetLink string `json:"magnet_link,omitempty"`
+	FilePath string `json:"file_path"`
 }
 
 var client *torrent.Client
@@ -21,34 +21,15 @@ func SetTorrentClient(c *torrent.Client) {
 func UploadTorrentHandler(c echo.Context) error {
 	var req TorrentUploadRequest
 
-	torrentFile, err := c.FormFile("torrent_file")
-	if err == nil {
-		file, err := torrentFile.Open()
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid file"})
-		}
-		defer file.Close()
-
-		infoHash, err := services.ProcessTorrentFromReader(file, client)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-		}
-
-		log.Printf("Torrent added with InfoHash: %s", infoHash)
-
-		return c.JSON(http.StatusOK, map[string]string{"info_hash": infoHash, "status": "download started"})
+	if err := c.Bind(&req); err != nil || req.FilePath == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid input, file_path is required"})
 	}
 
-	if err := c.Bind(&req); err != nil || req.MagnetLink == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid input"})
-	}
-
-	infoHash, err := services.ProcessMagnetLink(req.MagnetLink, client)
+	infoHash, err := services.ProcessTorrentFromFile(req.FilePath, client)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	log.Printf("Magnet link added with InfoHash: %s", infoHash)
-
+	log.Printf("Torrent file added from path %s with InfoHash: %s", req.FilePath, infoHash)
 	return c.JSON(http.StatusOK, map[string]string{"info_hash": infoHash, "status": "download started"})
 }
